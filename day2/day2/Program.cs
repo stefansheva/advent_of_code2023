@@ -1,4 +1,16 @@
 ﻿using System.Text.RegularExpressions;
+// ReSharper disable InconsistentNaming
+
+const string gameSetsSeparator = ";";
+const string ballSeparator = ",";
+const string GAME_REPLACE_IDENTIFIER = "Game ";
+const string RED_REPLACE_IDENTIFIER = " red";
+const string GREEN_REPLACE_IDENTIFIER = " green";
+const string BLUE_REPLACE_IDENTIFIER = " blue";
+const string RED = "red";
+const string GREEN = "green";
+const string BLUE = "blue";
+const string regexReplacePattern = @"(?:Game [0-9]+: )";
 
 Console.WriteLine("Day 2, Part 1, Start");
 var gameExample = @"Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
@@ -9,48 +21,36 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
 
 var gameInput = await File.ReadAllTextAsync("./input.txt");
 var gameList = gameInput.Split("\n");
-const string gameSetsSeparator = ";";
-const string ballSeparator = ",";
-const string gameReplaceIdentifier = "Game ";
-var regexReplacePattern = @"(?:Game [0-9]+: )";
 
-bool ValidateBall(string ball)
+bool isBallValid(string ball, int validationMarker, string identifier)
 {
-    var num = 0;
-    var isValid = true;
-    if (ball.Contains("red"))
-    {
-        var extractNumber = ball.Replace(" red", string.Empty);
-        num = int.Parse(extractNumber);
-        isValid = num <= 12;
-    } 
-    else if (ball.Contains("green"))
-    {
-        var extractNumber = ball.Replace(" green", string.Empty);
-        num = int.Parse(extractNumber);
-        isValid = num <= 13;
-    } 
-    else if (ball.Contains("blue"))
-    {
-        var extractNumber = ball.Replace(" blue", string.Empty);
-        num = int.Parse(extractNumber);
-        isValid = num <= 14;
-    }
-
-    Console.WriteLine(num);
-    return isValid;
+    var extractNumber = ball.Replace(identifier, string.Empty);
+    var num = int.Parse(extractNumber);
+    return num <= validationMarker;
 }
 
 bool ValidateGameSet(string set)
 {
     var isValid = true;
-    var balls = set.Split(ballSeparator);
+    var cubes = set.Split(ballSeparator);
     
-    foreach (var ball in balls)
+    foreach (var cube in cubes)
     {
-        isValid = ValidateBall(ball.Trim());
+        var ball = cube.Trim();
+        if (ball.Contains(RED))
+        {
+            isValid = isBallValid(ball, 12, RED_REPLACE_IDENTIFIER);
+        } 
+        else if (ball.Contains(GREEN))
+        {
+            isValid = isBallValid(ball, 13, GREEN_REPLACE_IDENTIFIER);
+        } 
+        else if (ball.Contains(BLUE))
+        {
+            isValid = isBallValid(ball, 14, BLUE_REPLACE_IDENTIFIER);
+        }
+        
         if (!isValid) break;
-        Console.WriteLine(ball.Trim());
     }
 
     return isValid;
@@ -59,15 +59,13 @@ bool ValidateGameSet(string set)
 var validGamesCounter = 0;
 foreach (var game in gameList)
 {
-    var gameId = game.Replace(gameReplaceIdentifier, string.Empty).Split(":").First();
+    var gameId = game.Replace(GAME_REPLACE_IDENTIFIER, string.Empty).Split(":").First();
     var gameSets = Regex.Replace(game, regexReplacePattern, string.Empty).Split(gameSetsSeparator);
-
     var isValid = true;
+
     foreach (var set in gameSets)
     {
-        Console.WriteLine(set.Trim());
         isValid = ValidateGameSet(set.Trim());
-
         if (!isValid) break;
     }
 
@@ -78,5 +76,39 @@ foreach (var game in gameList)
     }
 }
 
-Console.WriteLine("Day 2, Part 1, End");
-Console.WriteLine($"Total Part 1: {validGamesCounter}");
+Console.WriteLine($"Day 2, Part 1, END Total: {validGamesCounter}");
+
+Console.WriteLine("Day 2, Part 2, Start");
+var gameExamplePartTwo = @"Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+
+int FindMax(IEnumerable<string> sets, string identifier) => sets
+    .Select(set => set.Trim().Replace(identifier, string.Empty))
+    .Select(extractNumber => int.Parse(extractNumber))
+    .Prepend(0).Max();
+
+(int, int, int) FindMaxBallValue(string gameSets)
+{
+    var sets = gameSets.Replace(gameSetsSeparator, ballSeparator).Split(ballSeparator);
+    (var red, var green, var blue) =  (0, 0, 0);
+
+    red = FindMax(sets.Where(x => x.Contains(RED)), RED_REPLACE_IDENTIFIER);
+    green = FindMax(sets.Where(x => x.Contains(GREEN)), GREEN_REPLACE_IDENTIFIER);
+    blue = FindMax(sets.Where(x => x.Contains(BLUE)), BLUE_REPLACE_IDENTIFIER);
+    
+    return (red, green, blue);
+}
+
+var powerSetsSum = 0;
+var gameInputPartTwo = gameInput.Split("\n");
+foreach (var game in gameInputPartTwo)
+{
+    var gameSets = Regex.Replace(game, regexReplacePattern, string.Empty);
+    (var red, var green, var blue) = FindMaxBallValue(gameSets.Trim());
+    powerSetsSum += red * green * blue;
+}
+
+Console.WriteLine($"Day 2, Part 2 END, Total: {powerSetsSum}");
