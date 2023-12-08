@@ -4,6 +4,7 @@ const string RaceSeparator = " ";
 const string TimeDistanceSeparator = "\n";
 const string TimeRegex = @"(Time:\s+)";
 const string DistanceRegex = @"(Distance:\s+)";
+const string TimeDistanceRegex = @"(Time:\s+)|(Distance:\s+)";
 
 var gameInput = @"
 Time:      7  15   30
@@ -33,10 +34,8 @@ foreach (var race in races)
     var waysToBeatRaceRecord = 0;
     for (int holdBtn = 0; holdBtn < race.Item1; holdBtn++)
     {
-        // var holdButtonTime = targetDistance - i;
         var remainingTime = race.Item1 - holdBtn;
         var passedDistance = holdBtn * remainingTime;
-
         if (passedDistance > targetDistance)
         {
             waysToBeatRaceRecord += 1;
@@ -50,6 +49,26 @@ Console.WriteLine($"Total Points: {waysToBeatAllRace}");
 Console.WriteLine("Day 6, Part One END");
 
 Console.WriteLine("Day 6, Part TWO START");
+var normInput = Regex.Replace(gameInput.Trim(), TimeDistanceRegex, string.Empty)
+    .Trim()
+    .Split(TimeDistanceSeparator);
 
-Console.WriteLine($"Total cards: {0}");
+var time = string.Join("", normInput.First().Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
+var distance = string.Join("", normInput.Last().Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
+
+var targetDist = long.Parse(distance);
+var raceTime = long.Parse(time);
+var raceRecordBeat = 0;
+for (var holdBtn = 0; holdBtn < raceTime; holdBtn++)
+{
+    var remainingTime = raceTime - holdBtn;
+    var passedDistance = holdBtn * remainingTime;
+    if (passedDistance > targetDist)
+    {
+        raceRecordBeat += 1;
+    }
+}
+
+
+Console.WriteLine($"Total cards: {raceRecordBeat}");
 Console.WriteLine("Day 6, Part TWO END");
