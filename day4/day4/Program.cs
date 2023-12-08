@@ -3,7 +3,6 @@
 const string CardsSeparator = "\n";
 const string CardNumberSeparator = "|";
 const string NormalizationRegex = @"(Card \d+:)";
-Console.WriteLine("Day 4, Part One START");
 
 var gameInput = @"
 Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
@@ -17,6 +16,7 @@ gameInput = await File.ReadAllTextAsync("./input.txt");
 var normalizeInput = Regex.Replace(gameInput, NormalizationRegex, string.Empty);
 var cards = normalizeInput.Trim().Split(CardsSeparator);
 
+Console.WriteLine("Day 4, Part One START");
 var winningNumbersCounter = 0.0;
 const int expBase = 2;
 foreach (var card in cards)
@@ -37,3 +37,43 @@ foreach (var card in cards)
 
 Console.WriteLine($"Total Points: {winningNumbersCounter}");
 Console.WriteLine("Day 4, Part One END");
+
+Console.WriteLine("Day 4, Part TWO START");
+
+var scratchcards = normalizeInput.Trim().Split(CardsSeparator).ToList();
+var list = scratchcards.Select(x => new ScratchCard(1, x)).ToList();
+
+for (var i = 0; i < list.Count; i++)
+{
+    for (var j = 0; j < list[i].Count; j++)
+    {
+        var groupedCards = list[i].Value.Split(CardNumberSeparator);
+        var winningNumbers = groupedCards
+            .First()
+            .Split(" ")
+            .Where(x => !string.IsNullOrWhiteSpace(x));
+        var totalWinnedCards = groupedCards
+            .Last()
+            .Split(" ")
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Count(num => winningNumbers.Contains(num.Trim()));
+
+        list.Skip(i + 1).Take(totalWinnedCards).ToList().ForEach(x => x.Count += 1);
+    }
+}
+
+var totalScratchCards = list.Select(x => x.Count).Sum();
+Console.WriteLine($"Total cards: {totalScratchCards}");
+Console.WriteLine("Day 4, Part TWO END");
+class ScratchCard
+{
+    public int Count { get; set; }
+    public string Value { get; set; }
+
+    public ScratchCard(int count, string value)
+    {
+        Count = count;
+        Value = value;
+    }
+}
+
